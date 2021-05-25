@@ -23,9 +23,9 @@ $DomainPath = $((Get-ADDomain).DistinguishedName) # e.g."DC=contoso,DC=azure"
     New-ADOrganizationalUnit -Name:$OUName -Path:$DomainPath -ProtectedFromAccidentalDeletion:$true 
     Set-ADObject -Identity:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
     
-    for ($i = 1; $i -le 2; $i++)
+    for ($i = 1; $i -le 3; $i++)
     { 
-        New-ADOrganizationalUnit -Name:"AZ-Pool0$i" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
+        New-ADOrganizationalUnit -Name:"Pool0$i" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
     }
 #endregion 
 
@@ -34,7 +34,7 @@ New-ADOrganizationalUnit -Name:"Service" -Path:"OU=$OUName,$DomainPath" -Protect
 #endregion
 
 #region add Sec Group "Horizon View Users"
-New-ADGroup -GroupCategory:"Security" -GroupScope:"Global" -Name:"Horizon View Users" -Path:"OU=$OUName,$DomainPath" -SamAccountName:"Horizon View Users" 
+    New-ADGroup -GroupCategory:"Security" -GroupScope:"Global" -Name:"Horizon View Users" -Path:"OU=$OUName,$DomainPath" -SamAccountName:"Horizon View Users" 
 #endregion
 
 #disable IE Enhanced Security Configuration
@@ -50,7 +50,7 @@ Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnable
 
     for ($i = 1; $i -le 5; $i++)
     { 
-        $userName = "test0$i"
+        $userName = "test$i"
         $Identity = "CN=$userName" +"," +$ADPath
         if ((Get-ADUser -Identity $Identity) -ne $null)  {Write-Output "$Identity already exists"; continue}
         $user = New-ADUser -Path:$ADPath `
@@ -78,7 +78,7 @@ Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnable
 
     for ($i = 1; $i -le 2; $i++)
     { 
-        $userName = "svc0$i"
+        $userName = "svc$i"
         $Identity = "CN=$userName" +"," +$ADPath
         if ((Get-ADUser -Identity $Identity) -ne $null)  {Write-Output "$Identity already exists"; continue}
         $user = New-ADUser -Path:$ADPath `
