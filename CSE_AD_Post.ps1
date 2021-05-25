@@ -6,7 +6,7 @@
     [string] $WVDUsersPassword
 )
 
-##this will be our temp folder - need it for download / logging
+#this will be our temp folder - need it for download / logging
 $tmpDir = "c:\temp\" 
 
 #create folder if it doesn't exist
@@ -23,19 +23,18 @@ $DomainPath = $((Get-ADDomain).DistinguishedName) # e.g."DC=contoso,DC=azure"
     New-ADOrganizationalUnit -Name:$OUName -Path:$DomainPath -ProtectedFromAccidentalDeletion:$true 
     Set-ADObject -Identity:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
     
-    for ($i = 1; $i -le 3; $i++)
+    for ($i = 1; $i -le 2; $i++)
     { 
-        New-ADOrganizationalUnit -Name:"AZPool0$i" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
+        New-ADOrganizationalUnit -Name:"AZ-Pool0$i" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
     }
 #endregion 
 
 #region OU for Service Users
-New-ADOrganizationalUnit -Name:"Users" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
-New-ADOrganizationalUnit -Name:"Groups" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
+## New-ADOrganizationalUnit -Name:"Service" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
 #endregion
 
 #region add Sec Group "Horizon View Users"
-New-ADGroup -GroupCategory:"Security" -GroupScope:"Global" -Name:"Horizon View Users" -Path:"OU=Groups,$OUName,$DomainPath" -SamAccountName:"Horizon View Users" 
+New-ADGroup -GroupCategory:"Security" -GroupScope:"Global" -Name:"Horizon View Users" -Path:"OU=$OUName,$DomainPath" -SamAccountName:"Horizon View Users" 
 #endregion
 
 #disable IE Enhanced Security Configuration
@@ -47,11 +46,11 @@ Set-ItemProperty -Path $ieESCAdminPath -Name IsInstalled -Value $ieESCAdminEnabl
 Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnabled
 
 #region create some Horizon View Users test users
-    $ADPath = "OU=Users,$OUName,$DomainPath"
+    $ADPath = "OU=$OUName,$DomainPath"
 
     for ($i = 1; $i -le 4; $i++)
     { 
-        $userName = "test$i"
+        $userName = "test0$i"
         $Identity = "CN=$userName" +"," +$ADPath
         if ((Get-ADUser -Identity $Identity) -ne $null)  {Write-Output "$Identity already exists"; continue}
         $user = New-ADUser -Path:$ADPath `
@@ -61,7 +60,7 @@ Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnable
         -PassThru -UserPrincipalName $("$userName@"+$((Get-ADDomain).Forest))
         
         #Add-ADPrincipalGroupMembership -Identity:$user.DistinguishedName -MemberOf:"CN=Remote Desktop Users,CN=Builtin,DC=$($DomainName.Split('.')[0]),DC=$($DomainName.Split('.')[1])"
-        Set-ADGroup -Add:@{'Member'="CN=$userName,$ADPath"} -Identity:"CN=Horizon View Users,OU=Groups,$OUName,$DomainPath" 
+        Set-ADGroup -Add:@{'Member'="CN=$userName,$ADPath"} -Identity:"CN=Horizon View Users,$ADPath" 
 
         #Convert to secure string
         $Password = ConvertTo-SecureString "$WVDUsersPassword" -AsPlainText -Force 
@@ -75,11 +74,11 @@ Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnable
 #endregion
 
 #region create some Service users for Domainjoin / bin
-    $ADPath = "OU=Service,$OUName,$DomainPath"
+    $ADPath = "OU=$OUName,$DomainPath"
 
     for ($i = 1; $i -le 2; $i++)
     { 
-        $userName = "svc$i"
+        $userName = "svc0$i"
         $Identity = "CN=$userName" +"," +$ADPath
         if ((Get-ADUser -Identity $Identity) -ne $null)  {Write-Output "$Identity already exists"; continue}
         $user = New-ADUser -Path:$ADPath `
