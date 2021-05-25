@@ -30,7 +30,7 @@ $DomainPath = $((Get-ADDomain).DistinguishedName) # e.g."DC=contoso,DC=azure"
 #endregion 
 
 #region OU for Service Users
-## New-ADOrganizationalUnit -Name:"Service" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
+New-ADOrganizationalUnit -Name:"Service" -Path:"OU=$OUName,$DomainPath" -ProtectedFromAccidentalDeletion:$true 
 #endregion
 
 #region add Sec Group "Horizon View Users"
@@ -48,7 +48,7 @@ Set-ItemProperty -Path $ieESCUserPath -Name IsInstalled -Value $ieESCAdminEnable
 #region create some Horizon View Users test users
     $ADPath = "OU=$OUName,$DomainPath"
 
-    for ($i = 1; $i -le 4; $i++)
+    for ($i = 1; $i -le 5; $i++)
     { 
         $userName = "test0$i"
         $Identity = "CN=$userName" +"," +$ADPath
